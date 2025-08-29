@@ -20,10 +20,24 @@ struct NewAccountingView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            Text("新账单")
-                .font(.title)
-                .foregroundStyle(Color.aPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                Text("新账单")
+                    .font(.title)
+                    .foregroundStyle(Color.aPrimary)
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(2)
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(Color.aSecondary)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
             VStack(spacing: 6) {
                 Text("时间")
                     .font(.headline)
@@ -101,9 +115,10 @@ struct NewAccountingView: View {
                 Button {
                     saveAccounting()
                 } label: {
-                    Image(systemName: amount != Decimal(0) ? "square.and.arrow.down" : "xmark.circle")
+                    Image(systemName: "square.and.arrow.down")
                         .resizable()
                         .scaledToFit()
+                        .padding(2)
                         .frame(width: 24, height: 24)
                         .foregroundStyle(Color.aPrimary)
                         .contentShape(Rectangle())
@@ -118,11 +133,7 @@ struct NewAccountingView: View {
     }
     
     private func saveAccounting() {
-        guard amount != Decimal(0) else {
-            dismiss()
-            return
-        }
-        let accounting = Accounting(category: category, amount: amount, desc: desc)
+        let accounting = Accounting(date: date, category: category, amount: amount, desc: desc)
         appStore.newAccountingWithContenxt(modelContext, accounting: accounting)
         dismiss()
     }
@@ -130,6 +141,7 @@ struct NewAccountingView: View {
 
 #Preview {
     NewAccountingView()
+        .environment(AppStore())
         .modelContainer(for: [Accounting.self, AccountingAnalyzReport.self])
         .frame(minWidth: 120, maxWidth: 240)
 }

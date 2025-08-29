@@ -13,10 +13,24 @@ struct EnvironmentView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            Text("配置")
-                .font(.title)
-                .foregroundStyle(Color.aPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                Text("配置")
+                    .font(.title)
+                    .foregroundStyle(Color.aPrimary)
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(2)
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(Color.aSecondary)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
             ForEach(Array(appStore.environment.keys), id: \.self) { key in
                 VStack(spacing: 6) {
                     Text(key)
@@ -34,23 +48,6 @@ struct EnvironmentView: View {
                     .foregroundStyle(Color.aPrimary)
                 }
             }
-
-            HStack {
-                Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark.circle")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 24, height: 24)
-                        .foregroundStyle(Color.aPrimary)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                Spacer()
-            }
-            .padding(.top, 32)
         }
         .padding(16)
         .frame(maxWidth: 320)

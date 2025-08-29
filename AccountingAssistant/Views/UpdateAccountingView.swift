@@ -14,18 +14,37 @@ struct UpdateAccountingView: View {
     @Environment(\.dismiss) var dismiss
     @State var accounting: Accounting
     
+    @State var date: Date = Date()
+    @State var category: AccountingCategory = .Other
+    @State var amount: Decimal = Decimal(0)
+    @State var desc: String = ""
+
     var body: some View {
         VStack(spacing: 16) {
-            Text("更新账单")
-                .font(.title)
-                .foregroundStyle(Color.aPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                Text("更新账单")
+                    .font(.title)
+                    .foregroundStyle(Color.aPrimary)
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(2)
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(Color.aSecondary)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
             VStack(spacing: 6) {
                 Text("时间")
                     .font(.headline)
                     .foregroundStyle(Color.aPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                DatePicker(selection: Binding(get: { accounting.date }, set: { accounting.date = $0 })) {
+                DatePicker(selection: $date) {
                 }
                 .pickerStyle(.automatic)
                 .font(.body)
@@ -37,17 +56,17 @@ struct UpdateAccountingView: View {
                     .foregroundStyle(Color.aPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Menu {
-                    ForEach(AccountingCategory.allCases, id: \.self) { category in
+                    ForEach(AccountingCategory.allCases, id: \.self) { c in
                         Button {
-                            accounting.category = category
+                            category = c
                         } label: {
-                            Text(category.text)
+                            Text(c.text)
                                 .font(.body)
                                 .foregroundStyle(Color.aPrimary)
                         }
                     }
                 } label: {
-                    Text(accounting.category.text)
+                    Text(category.text)
                         .font(.body)
                         .foregroundStyle(Color.aPrimary)
                 }
@@ -61,14 +80,14 @@ struct UpdateAccountingView: View {
                     .foregroundStyle(Color.aPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Stepper(
-                    value: Binding(get: { accounting.amount.toFloat() }, set: { accounting.amount = Decimal(Double($0)) }),
+                    value: Binding(get: { amount.toFloat() }, set: { amount = Decimal(Double($0)) }),
                     step: 0.01
                 ) {
                     TextField(
                         "0.00",
                         text: Binding(
-                            get: { accounting.amount.formatString(2, group: .never) },
-                            set: { accounting.amount = Decimal(string: $0) ?? Decimal(0) }
+                            get: { amount.formatString(2, group: .never) },
+                            set: { amount = Decimal(string: $0) ?? Decimal(0) }
                         )
                     )
                     .font(.body)
@@ -81,7 +100,7 @@ struct UpdateAccountingView: View {
                     .font(.headline)
                     .foregroundStyle(Color.aPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                TextEditor(text: Binding(get: { accounting.desc }, set: { accounting.desc = $0 }))
+                TextEditor(text: $desc)
                     .frame(minHeight: 64, maxHeight: 128)
                     .foregroundStyle(Color.aPrimary)
                     .font(.body)
@@ -106,11 +125,12 @@ struct UpdateAccountingView: View {
             HStack {
                 Spacer()
                 Button {
-                    dismiss()
+                    updateAccounting()
                 } label: {
-                    Image(systemName: "xmark.circle")
+                    Image(systemName: "square.and.arrow.down")
                         .resizable()
                         .scaledToFit()
+                        .padding(2)
                         .frame(width: 24, height: 24)
                         .foregroundStyle(Color.aPrimary)
                         .contentShape(Rectangle())
@@ -122,6 +142,25 @@ struct UpdateAccountingView: View {
         }
         .padding(16)
         .frame(maxWidth: 320)
+        .onAppear {
+            getData()
+        }
+    }
+    
+    private func getData() {
+        self.date = accounting.date
+        self.category = accounting.category
+        self.amount = accounting.amount
+        self.desc = accounting.desc
+    }
+    
+    private func updateAccounting() {
+        accounting.date = self.date
+        accounting.category = self.category
+        accounting.amount = self.amount
+        accounting.desc = self.desc
+        appStore.updateAccountingWithContenxt(modelContext, accounting: accounting)
+        dismiss()
     }
     
     private func deleteAccounting() {
@@ -132,8 +171,9 @@ struct UpdateAccountingView: View {
 
 #Preview {
     UpdateAccountingView(
-        accounting: .init(category: .Entertainment, amount: Decimal(100), desc: "Game")
+        accounting: .init(category: .Entertainment, amount: Decimal(-100), desc: "Game")
     )
+    .environment(AppStore())
     .modelContainer(for: [Accounting.self, AccountingAnalyzReport.self])
     .frame(minWidth: 120, maxWidth: 240)
 }

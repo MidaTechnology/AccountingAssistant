@@ -62,7 +62,7 @@ extension AppStore {
         self.analyzReport = reports.first
     }
     
-    /// 用户创建单个账单信息
+    /// 创建账单信息
     /// - Parameters:
     ///   - context: 数据存储 Context
     ///   - accounting: 账单
@@ -70,7 +70,21 @@ extension AppStore {
     @MainActor
     func newAccountingWithContenxt(_ context: ModelContext, accounting: Accounting) {
         context.insert(accounting)
-        self.accountings.insert(accounting, at: 0)
+        let index = self.accountings.firstIndex(where: { $0.date < accounting.date}) ?? 0
+        self.accountings.insert(accounting, at: index)
+    }
+    
+    /// 更新账单信息
+    /// - Parameters:
+    ///   - context: 数据存储 Context
+    ///   - accounting: 账单
+    /// - Returns: 新账单
+    @MainActor
+    func updateAccountingWithContenxt(_ context: ModelContext, accounting: Accounting) {
+        // Reorder
+        if let a = self.accountings.first(where: { $0.id < accounting.id }), a.date != accounting.date {
+            self.accountings.sort(by: { $0.date > $1.date })
+        }
     }
     
     /// 删除单个账单信息
@@ -81,7 +95,7 @@ extension AppStore {
         self.accountings.removeAll(where: { $0.id == accounting.id })
     }
     
-    /// 根据用户输入生成账单
+    /// AI 生成账单
     /// - Parameters:
     ///   - context: 数据存储 Context
     ///   - text: 用户输入信息
@@ -135,7 +149,7 @@ extension AppStore {
         }
     }
     
-    /// 近期账单分析
+    /// AI 账单分析
     /// - Parameters:
     ///   - text: 用户输入信息
     ///   - context: 数据存储 Context
